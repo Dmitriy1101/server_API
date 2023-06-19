@@ -81,3 +81,4 @@ class MessageViewSet(ReadOnlyModelViewSet):
         response.data.append(queryset.aggregate(total = Count('id')))
         return response
 #---------------------------------------------------
+

@@ -51,3 +51,4 @@ class MessageSerializer(serializers.ModelSerializer):
         model = Message
         fields = ['id', 'status_sent', 'clients', 'sendlist']#, 'some'] # Добавляем поле some 
         read_only_fields = []
+        

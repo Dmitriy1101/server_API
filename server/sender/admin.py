@@ -15,3 +15,4 @@ class QuestionAdmin(admin.ModelAdmin):
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ['id', 'date_send', 'status_sent', 'clients', 'sendlist']
     list_filter = ['id', 'date_send', 'status_sent']
+

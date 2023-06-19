@@ -20,3 +20,4 @@ app.autodiscover_tasks()
 def debug_task():
     time.sleep(5)
     print('test task!!')
+    
