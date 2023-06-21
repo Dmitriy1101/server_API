@@ -58,9 +58,6 @@ class SendListViewSet(ModelViewSet):
 #---------------------------------------------------
 class MessageViewSet(ReadOnlyModelViewSet):
     queryset = Message.objects.all().prefetch_related(
-# В таком режие извлечения из бд для урезания запроса( .only('date_start', 'date_end', 'send_text') ) мы пишем новый 'вложеный' сериалезатор и
-# не используя существующий, тк обычный приведет к увеличению числа запросов из за указанных полей(fields), или не используем вложеный сериализатор.
-# ('date_start', 'date_end', 'send_text') должны совападать 
         Prefetch('clients',
                  queryset=Clients.objects.all().only('phone_number', 't_zone')),
         Prefetch('sendlist', 
@@ -74,11 +71,11 @@ class MessageViewSet(ReadOnlyModelViewSet):
 #    permission_classes = [IsAdminUser] #подключение авторизации только админ
 
 #В конце добавим словарь с подсчетом количества сообщений
-    def list(self, request, *args, **kwargs):
+'''    def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         response = super().list(request, *args, **kwargs)
         
         response.data.append(queryset.aggregate(total = Count('id')))
-        return response
+        return response'''
 #---------------------------------------------------
 

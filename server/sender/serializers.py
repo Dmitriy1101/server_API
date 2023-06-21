@@ -37,9 +37,9 @@ class IncSendListSerializer(SendListSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
 #    без вложеного сериализатора
-    clients = serializers.CharField(source = 'clients.phone_number')
-#    sendlist = serializers.CharField(source = 'sendlist.send_text')
-    sendlist = IncSendListSerializer()
+    clients = serializers.CharField(source = 'clients.phone_number') #клиент выводим не id а номер телефона 
+#    sendlist = serializers.CharField(source = 'sendlist.send_text') #рассылка выводим не id а текст
+    sendlist = IncSendListSerializer() #рассылка выводим не id а вложеный серриализатор
 
 # Добавляем поле some, надо еще во views.py
 #    some = serializers.SerializerMethodField()    
