@@ -5,6 +5,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 #from rest_framework.permissions import IsAdminUser  #подключение авторизации только админ
 from sender.models import Clients, SendList, Message
 from sender.serializers import ClientsSerializer, MessageSerializer, SendListSerializer
+from pytz import timezone
+import time
 
 
 
@@ -18,7 +20,9 @@ from sender.serializers import ClientsSerializer, MessageSerializer, SendListSer
 #---------------------------------------------------
 # Делаем через модель подробно
 class ClientViewSet(ModelViewSet):
-    queryset = Clients.objects.all()
+    queryset = Clients.objects.all().annotate(
+        main_date = F('t_zone'),
+    )
     serializer_class = ClientsSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['phone_number', 'phone_code', 'tags', 't_zone']

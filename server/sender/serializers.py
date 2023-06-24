@@ -11,13 +11,17 @@ class ClientsSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Clients
-        fields = ['id', 'phone_number', 'phone_code', 'tags', 't_zone']
+        fields = ['id', 'phone_number', 'phone_code', 'tags', 't_zone', 'main_date']
         read_only_fields = []
         
     def validate_phone_number(self, value):
         if not (value.isdigit() and value[0] == "7"):
             raise ValidationError('Номер формата "7XXXXXXXX" где X цифра от 0 до 9')
         return value
+
+    main_date = serializers.SerializerMethodField() 
+    def get_main_date(self, instance):
+        return instance.main_date
 
 
 
