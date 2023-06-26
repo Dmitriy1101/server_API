@@ -20,14 +20,12 @@ import time
 #---------------------------------------------------
 # Делаем через модель подробно
 class ClientViewSet(ModelViewSet):
-    queryset = Clients.objects.all().annotate(
-        main_date = F('t_zone'),
-    )
+    queryset = Clients.objects.all()
     serializer_class = ClientsSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['phone_number', 'phone_code', 'tags', 't_zone']
+    filterset_fields = ['phone_number', 'phone_code', 'tags']
     search_fields = ['tags']
-    ordering_fields = ['id', 'phone_number', 'phone_code', 't_zone']
+    ordering_fields = ['id', 'phone_number', 'phone_code']
 #    permission_classes = [IsAdminUser]   #подключение авторизации только админ
     
 
