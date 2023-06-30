@@ -64,7 +64,7 @@ class MessageViewSet(ReadOnlyModelViewSet):
                  queryset=Clients.objects.all().only('phone_number', 't_zone')),
         Prefetch('sendlist', 
                  queryset = SendList.objects.all().only('date_start', 'date_end')), 
-        )#.annotate(some = F('clients__id') + F('sendlist__id')) # Добавляем поле some еще надо в serializers.py
+        )
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['date_send', 'status_sent', 'clients', 'sendlist']

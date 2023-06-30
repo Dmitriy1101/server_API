@@ -1,5 +1,6 @@
 #from typing import Iterable, Optional
 from django.db import models
+from django.utils.timezone import get_current_timezone
 #from django.db.models import DateTimeField
 
 
@@ -25,7 +26,8 @@ class Clients(models.Model):
     phone_number = models.CharField('Телефон',unique=True , max_length=11)
     phone_code = models.CharField('Код оператора', max_length=10)
     tags = models.CharField('Тэги', max_length=127)
-    t_zone = models.DateTimeField('часовой пояс', auto_now=False)
+    t_zone = models.DateTimeField('часовой пояс')
+#default=get_current_timezone()
 
     def __str__(self):
         return str(self.phone_number)
