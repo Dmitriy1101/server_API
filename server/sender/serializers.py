@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import SendList, Clients, Message
-import time
+import datetime
 
        
 
@@ -9,7 +9,7 @@ import time
 #Настроеное поле
 class TimeCombineField(serializers.ModelField):
     '''
-    2 fields in 1 tme
+    2 fields in 1 time
     '''
     
     def __init__(self, format_time: str, *args, **kwargs):
@@ -19,9 +19,9 @@ class TimeCombineField(serializers.ModelField):
     #из базы 
     def to_representation(self, obj):
         value = self.model_field.value_from_object(obj)
-        if type(value) == str:
-            value = time.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
-            return time.strftime(self.format_time, value)
+        if isinstance(value, str):
+            value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
+            return value.strftime(self.format_time)
         return value.strftime(self.format_time)
     
     #в базу возвращает строку времани в базу пойдет в методе create и  update
@@ -31,36 +31,33 @@ class TimeCombineField(serializers.ModelField):
     
 class ClientsSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(min_length = 11, required=True)
-    time_zone = TimeCombineField(model_field=Clients._meta.get_field('t_zone'), format_time = '%z')
-    birthdate = TimeCombineField(model_field=Clients._meta.get_field('t_zone'), format_time = '%Y-%m-%d')
+    time_zone = TimeCombineField(model_field=Clients._meta.get_field('time_with_zone'), format_time = '%z')
+    birthdate = TimeCombineField(model_field=Clients._meta.get_field('time_with_zone'), format_time = '%Y-%m-%d')
     
     class Meta:
         model = Clients
-        fields = ['id', 'phone_number', 'phone_code', 'tags', 'time_zone', 'birthdate']#, 't_zone']
+        fields = ['id', 'phone_number', 'phone_code', 'tags', 'time_zone', 'birthdate']#, 'time_with_zone']
         read_only_fields = []
-          
+
+
+    def get_time_string (self, validated_data):
+        birthdate = validated_data.pop('birthdate', '2000-01-01')
+        tizone = validated_data.pop('time_zone', '+0100' )
+        return f'{birthdate}T00:00:00{tizone}'
+
+
     def create(self, validated_data): 
-        birthdate = validated_data.pop('birthdate')
-        time_zone = validated_data.pop('time_zone')
-        if birthdate == None:
-            birthdate="2000-01-01"
-        if time_zone == None:
-            time_zone="+0100"
-        validated_data['t_zone'] = f'{birthdate}T00:00:00{time_zone}'
+        validated_data['time_with_zone'] = self.get_time_string(validated_data)
         return Clients.objects.create(**validated_data)
+               
     
     def update (self, instance, validated_data):
+        t = validated_data
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.phone_code = validated_data.get('phone_code', instance.phone_code)
         instance.tags = validated_data.get('tags', instance.tags)
-        birthd = validated_data.pop('birthdate')
-        timone = validated_data.pop('time_zone')
-        if birthd== None:
-            birthd="2000-01-01"
-        if timone == None:
-            timone="+0100"
-        validated_data['t_zone'] = f'{birthd}T00:00:00{timone}'
-        instance.t_zone = validated_data.get('t_zone', instance.t_zone)
+        validated_data['time_with_zone'] = self.get_time_string(validated_data)
+        instance.time_with_zone = validated_data.get('time_with_zone', instance.time_with_zone)
         instance.save()
         return instance
 

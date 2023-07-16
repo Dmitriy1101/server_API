@@ -61,7 +61,7 @@ class SendListViewSet(ModelViewSet):
 class MessageViewSet(ReadOnlyModelViewSet):
     queryset = Message.objects.all().prefetch_related(
         Prefetch('clients',
-                 queryset=Clients.objects.all().only('phone_number', 't_zone')),
+                 queryset=Clients.objects.all().only('phone_number', 'time_with_zone')),
         Prefetch('sendlist', 
                  queryset = SendList.objects.all().only('date_start', 'date_end')), 
         )
@@ -80,4 +80,3 @@ class MessageViewSet(ReadOnlyModelViewSet):
         response.data.append(queryset.aggregate(total = Count('id')))
         return response'''
 #---------------------------------------------------
-
