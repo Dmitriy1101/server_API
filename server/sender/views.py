@@ -9,39 +9,34 @@ from pytz import timezone
 import time
 
 
-
-#---------------------------------------------------
-'''
-    Модель Клиент:
-        - добавить
-        - обновить
-        - удалить
-'''
 #---------------------------------------------------
 # Делаем через модель подробно
 class ClientViewSet(ModelViewSet):
+    '''
+        Модель Клиент:
+            - добавить
+            - обновить
+            - удалить
+    '''
     queryset = Clients.objects.all()
     serializer_class = ClientsSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['phone_number', 'phone_code', 'tags']
+    filterset_fields = ['phone_number', 'phone_code', 'tags', 'time_zone']
     search_fields = ['tags']
-    ordering_fields = ['id', 'phone_number', 'phone_code']
+    ordering_fields = ['id', 'phone_number', 'phone_code', 'time_zone']
 #    permission_classes = [IsAdminUser]   #подключение авторизации только админ
     
 
-
-
-#---------------------------------------------------
-'''
-    Модель Рассылка:
-        - добавить
-        - общая статистика с группировкой по статусу
-        - обновление
-        - удаление
-        - обработка активной
-'''
 #---------------------------------------------------
 class SendListViewSet(ModelViewSet):
+    '''
+        Модель Рассылка:
+            - добавить
+            - общая статистика с группировкой по статусу
+            - обновление
+            - удаление
+            - обработка активной
+    '''
     queryset = SendList.objects.all()
     serializer_class = SendListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -51,17 +46,15 @@ class SendListViewSet(ModelViewSet):
 #    permission_classes = [IsAdminUser]  #подключение авторизации только админ
 
 
-
-#---------------------------------------------------
-'''
-    Модель Сообщения:
-        - статистика
-'''
 #---------------------------------------------------
 class MessageViewSet(ReadOnlyModelViewSet):
+    '''
+        Модель Сообщения:
+            - статистика
+    '''
     queryset = Message.objects.all().prefetch_related(
         Prefetch('clients',
-                 queryset=Clients.objects.all().only('phone_number', 'time_with_zone')),
+                 queryset=Clients.objects.all().only('phone_number', 'time_zone')),
         Prefetch('sendlist', 
                  queryset = SendList.objects.all().only('date_start', 'date_end')), 
         )

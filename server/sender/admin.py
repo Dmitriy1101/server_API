@@ -9,7 +9,7 @@ class SendListAdmin(admin.ModelAdmin):
     
 @admin.register(Clients)
 class ClientsAdmin(admin.ModelAdmin):
-    list_display = ['id', 'phone_number', 'phone_code', 'tags']
+    list_display = ['id', 'phone_number', 'phone_code', 'tags', 'time_zone']
     list_filter = ['id', 'phone_number', 'phone_code' ]
     list_display_links = ['phone_number',]
     

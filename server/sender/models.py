@@ -4,22 +4,6 @@ from django.db import models
 from django.utils.timezone import get_current_timezone, make_aware
 
 
-
-class MyDateTimeField(models.DateTimeField):\
-'''    
-        def to_python(self, value):
-            if isinstance(value, datetime.datetime):
-#                val_tz = value.tzinfo
-#                value = datetime.datetime(value.year, value.month, value.day, tzinfo = value.tzinfo)
-#                value = self.make_aware(value, value.tzinfo)
-                return  value
-            elif isinstance(value, str):
-#                value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S%z')
-                return  datetime.datetime.fromisoformat(value)
-            else: 
-                return super().to_python(self)
-'''
-
 class SendList(models.Model):
     '''
         Модель рассылки:
@@ -45,10 +29,13 @@ class SendList(models.Model):
 
 #   Клиенты          
 class Clients(models.Model):
+    '''
+
+    '''
     phone_number = models.CharField('Телефон',unique=True , max_length=11)
     phone_code = models.CharField('Код оператора', max_length=10)
     tags = models.CharField('Тэги', max_length=127)
-    time_with_zone = MyDateTimeField('часовой пояс')
+    time_zone = models.CharField('часовой пояс', max_length=20)
 
     def __str__(self):
         return str(self.phone_number)
@@ -61,6 +48,9 @@ class Clients(models.Model):
 
 #  Сообщения
 class Message(models.Model):
+    '''
+    
+    '''
     date_send = models.DateTimeField('Начало рассылки',auto_now_add=True)
     status_sent = models.BooleanField('Доставлено', blank=True)
     clients = models.ForeignKey(Clients, on_delete=models.PROTECT, null=True, related_name='message')
