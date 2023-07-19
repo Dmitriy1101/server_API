@@ -3,8 +3,8 @@ from .models import SendList, Clients, Message
 
 @admin.register(SendList)
 class SendListAdmin(admin.ModelAdmin):
-    list_display = ['id', 'date_start', 'send_text', 'filter', 'date_end']
-    list_filter = ['id', 'date_start', 'filter', 'date_end' ]
+    list_display = ['id', 'date_start', 'send_text', 'filters', 'date_end']
+    list_filter = ['id', 'date_start', 'filters', 'date_end' ]
     list_display_links = ['date_start',]
     
 @admin.register(Clients)

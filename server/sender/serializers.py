@@ -4,8 +4,11 @@ from .models import SendList, Clients, Message
 import datetime
 
        
-#---------------------------------------------------   
 class ClientsSerializer(serializers.ModelSerializer):
+    '''
+    сериализатор клиентов
+    все по модели + валидация номера телефрна и часового пояса
+    '''
     phone_number = serializers.CharField(min_length = 11, required=True)
     
     class Meta:
@@ -19,36 +22,27 @@ class ClientsSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError('Неверный часовой пояс. Часовой пояс ожидается в формате +HH:MM или -HH:MM')
 
     def validate_phone_number(self, value):
-        if value.startswith('7'):
-            return value
-        raise serializers.ValidationError('7XXXXXXXXXX формат ввода')
+        if not (value.isdigit() and value.startswith('7')):
+            raise ValidationError('Номер формата "7XXXXXXXX" где X цифра от 0 до 9')
+        return value
+#---------------------------------------------------   
 
 
-#---------------------------------------------------
 class SendListSerializer(serializers.ModelSerializer):
-
+    '''
+    сериализатор рассылки выводим все по модели
+    '''
     class Meta:
         model = SendList
-        fields = ['id', 'date_start', 'send_text', 'filter', 'date_end']
+        fields = ['id', 'date_start', 'send_text', 'filters', 'date_end']
         read_only_fields = []
 #---------------------------------------------------
 
         
-# вложеный серриализатор рассылки      
-class IncSendListSerializer(SendListSerializer):
-
-    class Meta:
-        model = SendList
-        fields = ['date_start', 'date_end']
-
-
-#---------------------------------------------------
 class MessageSerializer(serializers.ModelSerializer):
-#    без вложеного сериализатора
-    clients = serializers.CharField(source = 'clients.phone_number') #клиент выводим не id а номер телефона 
-#    sendlist = serializers.CharField(source = 'sendlist.send_text') #рассылка выводим не id а текст
-    sendlist = IncSendListSerializer() #рассылка выводим не id а вложеный серриализатор
-    
+    '''
+    сериализатор сообщений все по модели
+    '''
     class Meta:
         model = Message
         fields = ['id', 'status_sent', 'clients', 'sendlist']
