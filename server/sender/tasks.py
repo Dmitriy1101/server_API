@@ -7,14 +7,15 @@ from sender.serializers import ClientsSerializer
 
 class MessageFather:
     
-    def __init__(self, token, sendlist: SendList):
+    def __init__(self, token = 'G'):
         self.token = token
-        self.sendlist = sendlist
-        self.clients = Clients.objects.filter(tags__icontains__in = re.split(',', sendlist.filters))
         
     @property
     def header(self):
          return {'Authorization': f'OAuth {self.token}'}
+
+    def get_active_sendlist():
+        pass
     
 #    @shared_task
     def make_message_daddy(self, sendlist: SendList):
