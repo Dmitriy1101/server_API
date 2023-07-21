@@ -1,4 +1,8 @@
 req.http
+<<<<<<< HEAD
 
 __pycache__/
 *.pyc
+=======
+__pycache__/
+>>>>>>> cba4baf29a9b6821e6dec5ccb8dfaff74c668134
