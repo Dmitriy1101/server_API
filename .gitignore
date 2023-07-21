@@ -1,4 +1,4 @@
 req.http
 
 __pycache__/
-.pyc
+*.pyc
