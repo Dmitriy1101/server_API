@@ -9,7 +9,9 @@ from sender.models import Clients, SendList, Message
 
 @shared_task
 def activate_sending():
-    pass
+    sendlist_set = SendList.obgects.filter(date_start__lte = (datetime.now() + timedelta(days=1))).in_bulk()
+    [MessageFather.validate_start_time(**sendlist) for sendlist in sendlist_set if sendlist_set != None]
+
 
 class MessageFather:
     
@@ -19,6 +21,7 @@ class MessageFather:
     @property
     def header(self):
          return {'Authorization': f'OAuth {self.token}'}
+
     @shared_task
     def validate_start_time(**sendlist_data):
         if timezone.make_naive(sendlist_data['date_start']) <= datetime.now():

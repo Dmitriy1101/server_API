@@ -50,7 +50,6 @@ class SendListSerializer(serializers.ModelSerializer):
         instance = SendList.objects.create(**validated_data)
         validated_data['id'] = instance.id
         MessageFather.validate_start_time.delay(**validated_data)
-#        MessageFather.validate_start_time(instance)
         return instance
 
     def update(self, instance, validated_data):
