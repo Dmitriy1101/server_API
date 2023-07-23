@@ -1,9 +1,15 @@
 from celery import shared_task
-import requests, json, re
+#from celery_app import app
+import requests, re
+from django.utils import timezone
 from datetime import datetime
+from django.db.models import Prefetch
 from sender.models import Clients, SendList, Message
-from sender.serializers import ClientsSerializer
 
+
+@shared_task
+def activate_sending():
+    pass
 
 class MessageFather:
     
@@ -13,29 +19,35 @@ class MessageFather:
     @property
     def header(self):
          return {'Authorization': f'OAuth {self.token}'}
+    @shared_task
+    def validate_start_time(**sendlist_data):
+        if timezone.make_naive(sendlist_data['date_start']) <= datetime.now():
+#        if sendlist_data.date_start <= datetime.datetime.now:
+            return MessageFather.create_and_send_messages.delay(sendlist_data)
+        return
 
     def get_active_sendlist():
         pass
+
+    @shared_task
+    def take_this_messages():
+        message_set = Message.objects.filter(date_send__lte = datetime.now()).prefetch_related(
+            Prefetch('clients',
+                 queryset=Clients.objects.all().only('phone_number', 'id')),
+        )
+        for message in message_set:
+            resp = requests.patch(f'http://localhost:8000/api/clients/{message.clients.id}/', data={"phone_number": message.clients.phone_number, "phone_code": "111", "tags": 'victory', "time_zone": "-0000"})
+        return resp.status_code
     
-#    @shared_task
-    def make_message_daddy(self, sendlist: SendList):
-        clients_set = Clients.objects.filter(tags__icontains__in = re.split(',', sendlist.filters))
+    @shared_task
+    def create_and_send_messages(sendlist_data):
+        clients_set = Clients.objects.filter(tags__in = re.split(',', sendlist_data['filters']))
         if clients_set is None:
             return []
-        message_set = []
-        for client in clients_set:
-            message = Message(clients = client, sendlist = sendlist)
-            message_set.append(message)
-            message.save()
-        return message_set
+        message_set = Message.objects.bulk_create(
+            [Message(date_send = datetime.now(), status_sent = "in_progres", clients = client, sendlist = SendList(**sendlist_data)) for client in clients_set]
+            )
+        return MessageFather.take_this_messages.delay()
 
-    def take_this_messages(self, message_set):
-        for message in message_set:
-            client = [c for c in self.clients if c.id == message.clients_id]
-            client = client[0]
-            desp = requests.get('http://localhost:8000/api/clients/')
-            print(desp.status_code)
-            resp = requests.patch(f'http://localhost:8000/api/clients/{message.clients_id}/', data={"phone_number": "79876543210", "phone_code": "1", "tags": client.tags, "time_zone": "-0000"})
-            print(resp.status_code)
-        return
+
 

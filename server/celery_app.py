@@ -1,5 +1,5 @@
 import os, time
-
+from celery.schedules import crontab
 from celery import Celery
 from django.conf import settings
 
@@ -20,4 +20,10 @@ app.autodiscover_tasks()
 def debug_task():
     time.sleep(5)
     print('test task!!')
-    
+
+app.conf.beat_schedule = {
+    'be-ready-to-send': {
+        'task': 'sender.tasks.activate_sending',
+        'schedule': crontab(minute=0, hour=0),
+    },
+}

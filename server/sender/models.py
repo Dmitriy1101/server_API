@@ -52,14 +52,9 @@ class Message(models.Model):
             - id рассылки, в рамках которой было отправлено сообщение
             - id клиента, которому отправили
     '''
-    status_choice =  [
-        ("written", "written"),
-        ("in_progres", "in_progres"),
-        ("compleate", "compleate"),
-    ]
     
-    date_send = models.DateTimeField('Начало рассылки',auto_now_add=True)
-    status_sent = models.CharField('Статус', choices=status_choice, default="written")
+    date_send = models.DateTimeField('Начало рассылки', null=False)
+    status_sent = models.CharField('Статус', default="written")
     clients = models.ForeignKey(Clients, on_delete=models.PROTECT, null=True, related_name='message')
     sendlist = models.ForeignKey(SendList, on_delete=models.PROTECT, null=True, related_name='message')
 

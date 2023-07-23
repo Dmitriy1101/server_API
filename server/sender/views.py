@@ -1,4 +1,4 @@
-#from django.db.models import Prefetch, Count, F
+from django.db.models import Prefetch, Count, F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -34,7 +34,7 @@ class SendListViewSet(ModelViewSet):
             - удаление
             - обработка активной
     '''
-    queryset = SendList.objects.all()
+    queryset = SendList.objects.all().prefetch_related()
     serializer_class = SendListSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['id', 'date_start', 'send_text', 'filters', 'date_end']
@@ -49,7 +49,12 @@ class MessageViewSet(ReadOnlyModelViewSet):
         Модель Сообщения:
             - статистика
     '''
-    queryset = Message.objects.all()
+    queryset = Message.objects.all().prefetch_related(
+        Prefetch('clients',
+                 queryset=Clients.objects.all().only('phone_number')),
+        Prefetch('sendlist', 
+                 queryset = SendList.objects.all().only('send_text')), 
+        )
     serializer_class = MessageSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['id', 'date_send', 'status_sent', 'clients', 'sendlist']
