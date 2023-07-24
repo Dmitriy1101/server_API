@@ -23,7 +23,7 @@ class MessageFather:
     
     def __init__(self):
         self.url = 'https://probe.fbrq.cloud/v1/send/'
-        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ4Mjk2OTEsImlzcyI6ImZhYnJpcXVlIiwibmFtZSI6Imh0dHBzOi8vdC5tZS9EbWl0cnkxMTAxIn0.Taf2XzVF96tYsQHCN5lxRF1EcE3PWJq5TCgSRlcsKX0'
+        self.token = take_it()
         
     @property
     def header(self):
