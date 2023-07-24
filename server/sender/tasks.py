@@ -1,11 +1,17 @@
 from celery import shared_task
-#from celery_app import app
-import requests, re
+from urllib3.util.retry import Retry
+import requests, re 
+from requests.adapters import HTTPAdapter
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db.models import Prefetch
 from sender.models import Clients, SendList, Message
 
+
+def take_it():
+    with open('my.txt', 'r', encoding='utf-8') as f:
+        key = f.strip()
+    return key
 
 @shared_task
 def activate_sending():
@@ -15,8 +21,9 @@ def activate_sending():
 
 class MessageFather:
     
-    def __init__(self, token = 'G'):
-        self.token = token
+    def __init__(self):
+        self.url = 'https://probe.fbrq.cloud/v1/send/'
+        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ4Mjk2OTEsImlzcyI6ImZhYnJpcXVlIiwibmFtZSI6Imh0dHBzOi8vdC5tZS9EbWl0cnkxMTAxIn0.Taf2XzVF96tYsQHCN5lxRF1EcE3PWJq5TCgSRlcsKX0'
         
     @property
     def header(self):
@@ -38,9 +45,17 @@ class MessageFather:
             Prefetch('clients',
                  queryset=Clients.objects.all().only('phone_number', 'id')),
         )
-        for message in message_set:
-            resp = requests.patch(f'http://localhost:8000/api/clients/{message.clients.id}/', data={"phone_number": message.clients.phone_number, "phone_code": "111", "tags": 'victory', "time_zone": "-0000"})
-        return resp.status_code
+        with requests.Session() as s:
+            retry = Retry(connect = 3, backoff_factor = 0.5)
+            adatper = HTTPAdapter(max_retries = retry)
+            s.mount('http://', adapter = adatper)
+            s.mount('https://', adapter = adatper)
+            for message in message_set:
+                url = f'http://localhost:8000/api/clients/{message.clients.id}/'
+                data ={"phone_number": message.clients.phone_number, "phone_code": "111", "tags": 'victory', "time_zone": "-0000"}
+                s.patch(url, headers = {"content-type": "application/json"}, data = data)
+                print(s.text)
+        return
     
     @shared_task
     def create_and_send_messages(sendlist_data):
