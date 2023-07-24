@@ -2,3 +2,4 @@ req.http
 
 __pycache__/
 *.pyc
+sender/my.txt
