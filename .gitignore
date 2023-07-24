@@ -1,4 +1,5 @@
 req.http
 
-__pycache__/
+**/__pycache__
 *.pyc
+server/sender/my.txt
