@@ -9,9 +9,9 @@ from sender.models import Clients, SendList, Message
 
 
 def take_it():
-    with open('my.txt', 'r', encoding='utf-8') as f:
-        key = f.strip()
-    return key
+    with open('sender/my.txt', 'r', encoding='utf-8') as f:
+        key = f.readline()
+        return key
 
 @shared_task
 def activate_sending():
@@ -27,7 +27,7 @@ class MessageFather:
         
     @property
     def header(self):
-         return {'Authorization': f'OAuth {self.token}'}
+         return {'Authorization': f'Bearer {self.token}'}
 
     @shared_task
     def validate_start_time(**sendlist_data):
@@ -52,7 +52,7 @@ class MessageFather:
             s.mount('https://', adapter = adatper)
             for message in message_set:
                 url = f'http://localhost:8000/api/clients/{message.clients.id}/'
-                data ={"phone_number": message.clients.phone_number, "phone_code": "111", "tags": 'victory', "time_zone": "-0000"}
+                data ={"phone_number": message.clients.phone_number, "phone": "111", "tags": 'victory', "time_zone": "-0000"}
                 s.patch(url, headers = {"content-type": "application/json"}, data = data)
                 print(s.text)
         return
