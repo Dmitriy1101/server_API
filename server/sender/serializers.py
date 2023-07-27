@@ -49,7 +49,7 @@ class SendListSerializer(serializers.ModelSerializer):
             raise ValidationError('Проблема с датами начала или конца. Дата начала не может быть после окончания.')
         instance = SendList.objects.create(**validated_data)
         validated_data['id'] = instance.id
-        MessageFather.validate_start_time.delay(**validated_data)
+        MessageFather().validate_start_time.delay(**validated_data)
         return instance
 
     def update(self, instance, validated_data):
