@@ -1,9 +1,9 @@
 from celery import shared_task
 from urllib3.util.retry import Retry
 import requests, re , pytz
+from datetime import datetime, timedelta as dt
 from requests.adapters import HTTPAdapter
 from django.utils import timezone
-from datetime import datetime, timedelta
 from django.core.cache import cache
 from django.db.models import Prefetch
 from sender.models import Clients, SendList, Message
@@ -21,7 +21,7 @@ def messagefather_keeper():
             MessageFather().send_messages.apply_async(sendlist, eta = timezone.make_naive(sendlist.date_start))
 
 @shared_task
-def create_messages(self, **sendlist_data):
+def create_messages(**sendlist_data):
     '''Создает сообщения и инициирует немедленную рассылку(покачто так)'''
 
     clients_set = Clients.objects.filter(tags__in = re.split(',', sendlist_data['filters']))
@@ -29,7 +29,7 @@ def create_messages(self, **sendlist_data):
         return []
     message_set = Message.objects.bulk_create(
         [Message(
-            date_send = timezone.make_naive(sendlist_data['date_start'].astimezone(tz = datetime.timezone(datetime.timedelta(hours= int('{:.3}'.format(client.time_zone)))))), 
+            date_send = timezone.make_naive(sendlist_data['date_start'], datetime.strptime(client.time_zone, '%z').tzinfo), 
             status_sent = "written", 
             clients = client, 
             sendlist = SendList(**sendlist_data)
@@ -87,7 +87,7 @@ class MessageFather:
             return message_set
 
     @shared_task
-    def send_messages(self):
+    def send_messages():
         '''Отправляет сообщения получателю(покачто так)'''
         message_set = self.messages
         with requests.Session() as s:
