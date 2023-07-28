@@ -2,7 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import SendList, Clients, Message
-from .tasks import MessageFather
+from .tasks import create_messages
 import datetime
 
        
@@ -49,7 +49,7 @@ class SendListSerializer(serializers.ModelSerializer):
             raise ValidationError('Проблема с датами начала или конца. Дата начала не может быть после окончания.')
         instance = SendList.objects.create(**validated_data)
         validated_data['id'] = instance.id
-        MessageFather().validate_start_time.delay(**validated_data)
+        create_messages.delay(**validated_data)
         return instance
 
     def update(self, instance, validated_data):

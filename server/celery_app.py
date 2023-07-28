@@ -24,6 +24,6 @@ def debug_task():
 app.conf.beat_schedule = {
     'be-ready-to-send': {
         'task': 'sender.tasks.messagefather_keeper',
-        'schedule': crontab(minute=0, hour=0),
+        'schedule': crontab(),
     },
 }
