@@ -67,6 +67,27 @@ services:
       - DB_USER=dbuser
       - DB_PASS=pass
 
+  beat:
+    build:
+      context: .
+    hostname: beat
+    entrypoint: celery
+    command: -A celery_app.app beat --loglevel=info --max-interval 60
+    volumes:
+      - ./server:/server
+    links:
+      - redis
+    depends_on:
+      - redis
+      - flower
+      - database
+      - worker1
+      - worker2
+    environment:
+      - DB_HOST=database
+      - DB_NAME=dbname
+      - DB_USER=dbuser
+      - DB_PASS=pass
 
   flower:
     build:
