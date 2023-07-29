@@ -18,11 +18,10 @@ def message_keeper():
     '''Каждый час проверяет сообщенияя готовые к отправке в течении часа, создает задачу на рассылку по времени.'''
 
     send_set = Message.objects.filter(sendlist__date_end__gte = datetime.now()).filter(date_send__lte = datetime.now()).filter(status_sent = "written").prefetch_related(
-        Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'id')),
+        Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'time_zone')),
         Prefetch('sendlist',queryset=SendList.objects.all().only('send_text', 'date_end')),
         )
     if send_set:
-        print(f'>>>>>>>>>>>>>>>>>>>>>>>>{send_set}<<<<<<<<<<<<<<<<<<<<<<<<<<<')
         key = get_cache_key(send_set)
         cache.set(key, send_set, 60*5)
         return send_messages.delay(cache_key = key)
@@ -66,7 +65,7 @@ def get_messages(cache_key):
         return message_set
     else:
         message_set = Message.objects.filter(sendlist__date_end__gte = datetime.now()).filter(date_send__lte = datetime.now()).filter(status_sent = "written").prefetch_related(
-            Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'id')),
+            Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'time_zone')),
             Prefetch('sendlist',queryset=SendList.objects.all().only('send_text', 'date_end')),
         )
         cache.set(cache_key, message_set, 60*10)
@@ -88,14 +87,12 @@ def send_messages(cache_key = None):
 #            s.hooks['responce'].append(session_hook)
         for message in message_set:
             data ={
-#                "id": numpy.int64(message.id), 
+                "id": numpy.int64(message.id), 
                 "phone": int(message.clients.phone_number), 
                 "text": str(message.sendlist.send_text)
                 }
-            print(f'>>>>>>>>>>>>>>>>>>>>>>>>{data}<<<<<<<<<<<<<<<<<<<<<<<<<<<')
             resp = s.post(f'{get_url()}{numpy.int64(message.id)}', data = data)
             resp_dict[message.id] = resp.status_code
-            print(f'>>>>>>>>>>>>>>>>>>>>>>>>{resp.status_code}<<<<<<<<<<<<<<<<<<<<<<<<<<<')
     return try_to_end.delay(cache_key = cache_key, resp_dict = resp_dict)
 
 @shared_task
@@ -103,18 +100,18 @@ def try_to_end(cache_key, resp_dict):
     '''Проверяем результат'''
     message_set = get_messages(cache_key)
     for message in message_set:
-        if resp_dict.get(message.id) == 200:
+        if resp_dict.get(str(message.id)) == 200:
             message.status_sent = "Compleate"
-        elif timezone.make_naive(message.sendlist.date_end) >= datetime.now():
+            message.date_send =  datetime.now()
+        elif timezone.make_naive(message.sendlist.date_end, datetime.strptime(message.clients.time_zone, '%z').tzinfo) >= datetime.now():
+            message.date_send =  datetime.now()
             message.status_sent = "in_progres"
         else:
-            message.status_sent = f"resp status: {resp_dict.get(message.id)}"
+            message.status_sent = f"resp status: {resp_dict.get(str(message.id))}"
     Message.objects.bulk_update(message_set, ['status_sent'])
-    print(f'>>>>>>>>>>>>>>>>>>>>>>>>{message_set}<<<<<<<<<<<<<<<<<<<<<<<<<<<')
     message_set = [message for message in message_set if message.status_sent == "in_progres"]
     if message_set != []:
         key = get_cache_key(message_set)
         cache.set(key, message_set, 60*10)
-        print(f'>>>>>>>>>>>>>>>>>>>>>>>>{key}<<<<<<<<<<<<<<<<<<<<<<<<<<<')
-        return send_messages.apply_async(cache_key = key, countdown = 300)
+        return send_messages.apply_async(cache_key = key, countdown = 360)
     return
