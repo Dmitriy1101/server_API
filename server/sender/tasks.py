@@ -1,6 +1,6 @@
 from celery import shared_task
 from urllib3.util.retry import Retry
-import requests, re , pytz, numpy
+import requests, re , pytz, numpy, logging
 from datetime import datetime, timedelta as dt
 from requests.adapters import HTTPAdapter
 from django.utils import timezone
@@ -17,7 +17,7 @@ def get_cache_key(somefing):
 def message_keeper():
     '''Каждый час проверяет сообщенияя готовые к отправке в течении часа, создает задачу на рассылку по времени.'''
 
-    send_set = Message.objects.filter(sendlist__date_end__gte = datetime.now()).filter(date_send__lte = datetime.now()).filter(status_sent = "written").prefetch_related(
+    send_set = Message.objects.filter(sendlist__date_end__gte =datetime.now()).filter(date_send__lte = datetime.now()).filter(status_sent = "written").prefetch_related(
         Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'time_zone')),
         Prefetch('sendlist',queryset=SendList.objects.all().only('send_text', 'date_end')),
         )
@@ -74,6 +74,11 @@ def get_messages(cache_key):
 @shared_task
 def send_messages(cache_key = None):
     '''Отправляет сообщения получателю(покачто так)'''
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
     if not cache_key:
         cache_key = get_cache_key('ping-pong')
     resp_dict = {}
@@ -81,7 +86,7 @@ def send_messages(cache_key = None):
     with requests.Session() as s:
         retry = Retry(connect = 3, backoff_factor = 0.5)
         adatper = HTTPAdapter(max_retries = retry)
-        s.headers.update({"Authorization": f"Bearer {get_token()}"})
+        s.headers.update({"Authorization": f"Bearer {get_token()}", "Content-Type" : "application/json", "accept" : "application/json"})
 #            s.mount('http://', adapter = adatper)
         s.mount(get_url(), adapter = adatper)
 #            s.hooks['responce'].append(session_hook)
