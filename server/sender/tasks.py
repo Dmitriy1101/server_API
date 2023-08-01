@@ -51,7 +51,7 @@ def create_messages(**sendlist_data):
         
 
 def get_url():
-    return 'https://probe.fbrq.cloud/v1/send/'
+    return 'My URL'
 
 def get_token():
     '''(покачто так)'''
