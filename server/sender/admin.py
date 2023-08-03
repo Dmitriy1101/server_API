@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Prefetch
 from .models import SendList, Clients, Message
 
 @admin.register(SendList)
@@ -18,4 +19,11 @@ class MessageAdmin(admin.ModelAdmin):
     list_display = ['id', 'date_send', 'status_sent', 'clients', 'sendlist']
     list_filter = ['id', 'date_send', 'status_sent']
     list_display_links = ['date_send',]
+
+    def get_queryset(self, request):
+        queryset = Message.objects.all().prefetch_related(
+            Prefetch('clients',queryset=Clients.objects.only('id', 'phone_number')),
+            Prefetch('sendlist',queryset=SendList.objects.only('id', 'send_text')),
+        )
+        return queryset
 

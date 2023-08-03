@@ -24,8 +24,7 @@ def message_keeper():
     if send_set:
         key = get_cache_key(send_set)
         cache.set(key, send_set, 60*5)
-        return send_messages.delay(cache_key = key)
-
+        send_messages.delay(cache_key = key)
 
 @shared_task
 def create_messages(**sendlist_data):
@@ -48,10 +47,13 @@ def create_messages(**sendlist_data):
         cache.set(key, message_set, 60*10)
         return send_messages.delay(cache_key = key)
     return 
-        
+
+@shared_task
+def update_messages():
+    pass        
 
 def get_url():
-    return 'My URL'
+    return 'http://My_URL'
 
 def get_token():
     '''(покачто так)'''
