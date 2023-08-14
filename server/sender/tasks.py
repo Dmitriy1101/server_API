@@ -5,6 +5,7 @@ from datetime import datetime, timedelta as dt
 from requests.adapters import HTTPAdapter
 from django.utils import timezone
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.db.models import Prefetch
 from sender.models import Clients, SendList, Message
 
@@ -46,19 +47,20 @@ def create_messages(**sendlist_data):
         key = get_cache_key(message_set)
         cache.set(key, message_set, 60*10)
         return send_messages.delay(cache_key = key)
-    return 
+    return
 
 @shared_task
-def update_messages():
-    pass        
+def update_messages(**sendlist_data):
+    '''Пересоздадим сообщения'''
+    send_set = Message.objects.filter(sendlist__id = sendlist_data['id']).adelete()
+    create_messages.delay(**sendlist_data)
+          
 
 def get_url():
     return 'http://My_URL'
 
 def get_token():
-    '''(покачто так)'''
-    with open('sender/my.txt', 'r', encoding='utf-8') as f:
-        return f.readline()
+    return {"Authorization": f"Bearer JWT token"}
   
 def get_messages(cache_key):
     '''Возвращаем список сообщений, если списка нету в кэше, то создаем и помещаем в кэш'''
@@ -66,7 +68,7 @@ def get_messages(cache_key):
     if message_set:
         return message_set
     else:
-        message_set = Message.objects.filter(sendlist__date_end__gte = datetime.now()).filter(date_send__lte = datetime.now()).filter(status_sent = "written").prefetch_related(
+        message_set = Message.objects.filter(sendlist__date_end__gte = datetime.now()).filter(date_send__lte = datetime.now(), status_sent = "written").prefetch_related(
             Prefetch('clients',queryset=Clients.objects.all().only('phone_number', 'time_zone')),
             Prefetch('sendlist',queryset=SendList.objects.all().only('send_text', 'date_end')),
         )
@@ -76,11 +78,6 @@ def get_messages(cache_key):
 @shared_task
 def send_messages(cache_key = None):
     '''Отправляет сообщения получателю(покачто так)'''
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(logging.DEBUG)
-    requests_log.propagate = True
     if not cache_key:
         cache_key = get_cache_key('ping-pong')
     resp_dict = {}
@@ -88,8 +85,8 @@ def send_messages(cache_key = None):
     with requests.Session() as s:
         retry = Retry(connect = 3, backoff_factor = 0.5)
         adatper = HTTPAdapter(max_retries = retry)
-        s.headers.update({"Authorization": f"Bearer {get_token()}", "Content-Type" : "application/json", "accept" : "application/json"})
-#            s.mount('http://', adapter = adatper)
+        s.headers.update(get_token())
+#        s.mount('http://', adapter = adatper)
         s.mount(get_url(), adapter = adatper)
 #            s.hooks['responce'].append(session_hook)
         for message in message_set:

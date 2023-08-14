@@ -56,7 +56,7 @@ class Message(models.Model):
     date_send = models.DateTimeField('Начало рассылки', null=False)
     status_sent = models.CharField('Статус', default="written")
     clients = models.ForeignKey(Clients, on_delete=models.PROTECT, null=True, related_name='message')
-    sendlist = models.ForeignKey(SendList, on_delete=models.PROTECT, null=True, related_name='message')
+    sendlist = models.ForeignKey(SendList, on_delete=models.CASCADE, null=True, related_name='message')
 
     
     def __str__(self):

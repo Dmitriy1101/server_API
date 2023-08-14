@@ -53,10 +53,14 @@ class SendListSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        if instance.date_start <= datetime.now() or Message.objects.filter(date_send__gte = datetime.now(), sendlist__id = instance.id) != []:
+            raise ValueError('Поздно менять сообщения')
         instance.date_start = validated_data.get('date_start', instance.date_start)
         instance.send_text = validated_data.get('send_text', instance.send_text)
         instance.filters = validated_data.get('filters', instance.filters)
         instance.date_end = validated_data.get('date_end', instance.date_end)
+        validated_data['id'] = instance.id
+        update_messages.delay(**validated_data)
         instance.save()
         return instance
 #---------------------------------------------------
@@ -71,6 +75,6 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ['id', 'status_sent', 'clients', 'sendlist']
+        fields = ['id', 'date_send', 'status_sent', 'clients', 'sendlist']
         read_only_fields = []
 #---------------------------------------------------        
